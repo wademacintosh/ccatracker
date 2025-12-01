@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CCA Project Timeline Tracker Deployment</title>
-    <!-- Load Tailwind CSS for styling -->
+    <title>CCA 2026 Project Timeline Tracker</title>
+    <!-- Essential external scripts loaded in the head -->
+    <!-- 1. Tailwind CSS for modern styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Load React and ReactDOM Libraries -->
+    <!-- 2. React and ReactDOM for the component logic -->
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <!-- Load Babel to transform JSX/ES6 in the browser -->
+    <!-- 3. Babel for in-browser JSX compilation -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Load Lucide Icons -->
+    <!-- 4. Lucide Icons library -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         /* Custom font import for better look */
@@ -25,14 +26,11 @@
 <body>
     <div id="root"></div>
 
+    <!-- The application code MUST be inside this script tag -->
     <script type="text/babel">
-        // Paste the contents of ProjectTimelineApp.jsx here
-
-        import React, { useState, useMemo, useEffect } from 'react';
-        import { Calendar, CheckCircle, Clock, XCircle, FileText, ChevronRight } from 'lucide-react';
-
-        // NOTE: Lucide icons are available globally in the browser when loaded via <script>, 
-        // but we redefine them here for the component code to recognize them.
+        // To use React Hooks and elements, we rely on the globally loaded libraries (React, ReactDOM)
+        const { useState, useMemo, useEffect } = React;
+        const { Calendar, CheckCircle, Clock, XCircle, FileText, ChevronRight, Info } = lucide;
 
         // --- Configuration Data ---
 
@@ -155,9 +153,6 @@
 
         // --- Components ---
 
-        /**
-         * StageDetail Component: Shows the deliverables and documents for a selected stage.
-         */
         const StageDetail = ({ stageData }) => {
             return (
                 <div className="p-4 bg-white rounded-lg shadow-inner mt-4 border border-gray-100">
@@ -194,9 +189,6 @@
             );
         };
 
-        /**
-         * TimelineBar Component: Renders a single stage bar in the Gantt chart.
-         */
         const TimelineBar = ({ stage, dayRange, onClick, isSelected }) => {
             const startDay = dateToDayOfYear(stage.start);
             const endDay = dateToDayOfYear(stage.end);
@@ -228,16 +220,13 @@
         };
 
 
-        /**
-         * App Component: Main application layout and state management.
-         */
         const App = () => {
             const [selectedStage, setSelectedStage] = useState(null);
-            const currentDay = useMemo(() => dateToDayOfYear(new Date().toISOString().slice(0, 10)), []); // Day of year for today
-            const dayRange = 366; // 2026 is not a leap year, but using 366 for visual safety.
+            const currentDay = useMemo(() => dateToDayOfYear(new Date().toISOString().slice(0, 10)), []);
+            const dayRange = 366; 
 
             // Calculate the position of the current day marker
-            const currentDayPosition = (currentDay / dayRange) * 80 + 20; // 80% is the timeline width, 20% is the label width
+            const currentDayPosition = (currentDay / dayRange) * 80 + 20;
 
             // Handle stage click
             const handleStageClick = (stage) => {
@@ -353,6 +342,7 @@
             );
         };
 
+        // Render the main App component into the #root div
         ReactDOM.createRoot(document.getElementById('root')).render(<App />);
     </script>
 </body>
