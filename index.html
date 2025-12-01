@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CCA Project Timeline Tracker Deployment</title>
+    <!-- Load Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load React and ReactDOM Libraries -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Load Babel to transform JSX/ES6 in the browser -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Load Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Custom font import for better look */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // Paste the contents of ProjectTimelineApp.jsx here
+
+        import React, { useState, useMemo, useEffect } from 'react';
+        import { Calendar, CheckCircle, Clock, XCircle, FileText, ChevronRight } from 'lucide-react';
+
+        // NOTE: Lucide icons are available globally in the browser when loaded via <script>, 
+        // but we redefine them here for the component code to recognize them.
+
+        // --- Configuration Data ---
+
+        const PROJECT_TIMELINE_DATA = [
+            {
+                id: 'pre-I',
+                stage: 'Stage pre-I: Initiation & Planning',
+                start: '2026-01-01',
+                end: '2026-03-31',
+                deliverables: [
+                    { id: 1, task: 'ELT Briefing Note (Confirm approach/resources)', pdd: '2026-03-13', status: 'In Progress', lead: 'Kristy', doc: 'Cultural Commitments Awards Approach - ELT Briefing Note' },
+                    { id: 2, task: 'Communications Plan updated and approved', pdd: '2026-03-20', status: 'In Progress', lead: 'Aisha/Erin', doc: 'Cultural Commitments Awards Communications Plan 2026' },
+                ],
+                color: 'bg-indigo-500'
+            },
+            {
+                id: 'I',
+                stage: 'Stage I: Nominations',
+                start: '2026-04-01',
+                end: '2026-06-30',
+                deliverables: [
+                    { id: 3, task: 'Creative requests for designed materials', pdd: '2026-04-21', status: 'Complete', lead: 'Aisha', doc: 'Nomination Postcard/Poster template' },
+                    { id: 4, task: 'Nominations Open - Launch/Publicity', pdd: '2026-04-14', status: 'Complete', lead: 'Aisha/Erin', doc: 'Criteria Statements - 2026 CCA' },
+                    { id: 5, task: 'Nomination Period Closes', pdd: '2026-06-13', status: 'In Progress', lead: 'Kristy', doc: 'Final Nominee List' },
+                ],
+                color: 'bg-green-500'
+            },
+            {
+                id: 'II',
+                stage: 'Stage II: Pre-screening',
+                start: '2026-07-01',
+                end: '2026-07-31',
+                deliverables: [
+                    { id: 6, task: 'Initial Scoring (Top 36 Stories Identified)', pdd: '2026-07-15', status: 'Not Started', lead: 'Scoring Team', doc: '2026 Scoring Rubric / Initial Scoring' },
+                ],
+                color: 'bg-yellow-500'
+            },
+            {
+                id: 'III',
+                stage: 'Stage III: Selection Process',
+                start: '2026-08-01',
+                end: '2026-09-30',
+                deliverables: [
+                    { id: 7, task: 'Selection Committee Evaluations Complete', pdd: '2026-09-01', status: 'Not Started', lead: 'Program Lead', doc: '2026 Scoring Results' },
+                    { id: 8, task: 'Finalist list sent to Comms', pdd: '2026-09-15', status: 'Not Started', lead: 'Kristy', doc: '2026 Finalist Stories' },
+                ],
+                color: 'bg-red-500'
+            },
+            {
+                id: 'IV',
+                stage: 'Stage IV: Video/Award Production',
+                start: '2026-09-15',
+                end: '2026-10-31',
+                deliverables: [
+                    { id: 9, task: 'Finalist Videos (Filming/Editing/Captioning)', pdd: '2026-10-23', status: 'Not Started', lead: 'Aisha/Kristy', doc: '2026 Filming Schedule / Rough Cuts' },
+                    { id: 10, task: 'Awards ordered & plaques completed', pdd: '2026-10-30', status: 'Not Started', lead: 'Kristy', doc: '2026 Budget/Venue Options budgets' },
+                ],
+                color: 'bg-purple-500'
+            },
+            {
+                id: 'V',
+                stage: 'Stage V: Event (+ Logistics)',
+                start: '2026-11-01',
+                end: '2026-12-07',
+                deliverables: [
+                    { id: 11, task: 'Videos ready for awards day', pdd: '2026-11-15', status: 'Not Started', lead: 'Aisha', doc: '2026 CCA Host Scripts Final' },
+                    { id: 12, task: 'Celebration Event (Gala/Luncheon)', pdd: '2026-12-07', status: 'Not Started', lead: 'Kristy/Wade', doc: 'Event speaking notes / Hazard Assessment' },
+                ],
+                color: 'bg-blue-500'
+            },
+            {
+                id: 'VI',
+                stage: 'Stage VI: Post Event',
+                start: '2026-12-08',
+                end: '2026-12-31',
+                deliverables: [
+                    { id: 13, task: 'Wrap-up article/Post-event survey', pdd: '2026-12-20', status: 'Not Started', lead: 'Aisha/Kristy', doc: 'Final Report (for 2026 event)' },
+                ],
+                color: 'bg-teal-500'
+            },
+        ];
+
+        // --- Utility Functions ---
+
+        const dateToDayOfYear = (dateString) => {
+            const date = new Date(dateString);
+            const start = new Date(date.getFullYear(), 0, 0);
+            const diff = date - start;
+            const oneDay = 1000 * 60 * 60 * 24;
+            return Math.floor(diff / oneDay);
+        };
+
+        // Function to convert status string to corresponding icon and color
+        const getStatusIcon = (status) => {
+            switch (status) {
+                case 'Complete':
+                    return <CheckCircle className="w-4 h-4 text-green-500" />;
+                case 'In Progress':
+                    return <Clock className="w-4 h-4 text-yellow-600" />;
+                case 'Not Started':
+                    return <XCircle className="w-4 h-4 text-gray-400" />;
+                default:
+                    return <Info className="w-4 h-4 text-gray-500" />;
+            }
+        };
+
+        const getStatusColor = (status) => {
+            switch (status) {
+                case 'Complete':
+                    return 'text-green-600';
+                case 'In Progress':
+                    return 'text-yellow-700';
+                case 'Not Started':
+                    return 'text-gray-500';
+                default:
+                    return 'text-gray-700';
+            }
+        };
+
+
+        // --- Components ---
+
+        /**
+         * StageDetail Component: Shows the deliverables and documents for a selected stage.
+         */
+        const StageDetail = ({ stageData }) => {
+            return (
+                <div className="p-4 bg-white rounded-lg shadow-inner mt-4 border border-gray-100">
+                    <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                        Deliverables for {stageData.stage.split(': ')[1]}
+                    </h3>
+                    <ul className="space-y-3">
+                        {stageData.deliverables.map(task => (
+                            <li key={task.id} className="p-3 bg-gray-50 rounded-lg border border-gray-200 shadow-sm">
+                                <div className="flex items-start justify-between">
+                                    <div className="flex items-center space-x-3">
+                                        {getStatusIcon(task.status)}
+                                        <span className={`font-medium ${getStatusColor(task.status)}`}>
+                                            {task.task}
+                                        </span>
+                                    </div>
+                                    <span className="text-sm font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">
+                                        PDD: {task.pdd}
+                                    </span>
+                                </div>
+                                <div className="mt-2 text-sm text-gray-600 ml-7">
+                                    <p>
+                                        <span className="font-semibold">Lead:</span> {task.lead}
+                                    </p>
+                                    <p className="flex items-center mt-1">
+                                        <FileText className="w-3.5 h-3.5 mr-1 text-blue-500" />
+                                        <span className="font-semibold">Key Document:</span> {task.doc}
+                                    </p>
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            );
+        };
+
+        /**
+         * TimelineBar Component: Renders a single stage bar in the Gantt chart.
+         */
+        const TimelineBar = ({ stage, dayRange, onClick, isSelected }) => {
+            const startDay = dateToDayOfYear(stage.start);
+            const endDay = dateToDayOfYear(stage.end);
+
+            // Calculate position and width percentage
+            const left = (startDay / dayRange) * 100;
+            const width = ((endDay - startDay) / dayRange) * 100;
+
+            return (
+                <div className="h-10 mb-4 cursor-pointer relative" onClick={() => onClick(stage)}>
+                    {/* Stage Name Label */}
+                    <div className="absolute inset-y-0 left-0 flex items-center pr-2 w-[20%] text-right font-medium text-sm text-gray-700 border-r border-gray-300">
+                        <span className="truncate">{stage.stage.split(': ')[1]}</span>
+                    </div>
+
+                    {/* Gantt Bar container (80% width for the timeline section) */}
+                    <div className="absolute inset-y-0 left-[20%] w-[80%] pl-2">
+                        <div
+                            style={{ left: `${left}%`, width: `${width}%` }}
+                            className={`absolute h-8 rounded-md transition-all duration-300 ease-in-out shadow-lg 
+                                        ${stage.color} ${isSelected ? 'ring-4 ring-offset-2 ring-blue-500/80 z-10' : 'hover:opacity-90'}
+                                        flex items-center justify-center p-2 text-white text-xs font-bold`}
+                        >
+                            {stage.id}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+
+        /**
+         * App Component: Main application layout and state management.
+         */
+        const App = () => {
+            const [selectedStage, setSelectedStage] = useState(null);
+            const currentDay = useMemo(() => dateToDayOfYear(new Date().toISOString().slice(0, 10)), []); // Day of year for today
+            const dayRange = 366; // 2026 is not a leap year, but using 366 for visual safety.
+
+            // Calculate the position of the current day marker
+            const currentDayPosition = (currentDay / dayRange) * 80 + 20; // 80% is the timeline width, 20% is the label width
+
+            // Handle stage click
+            const handleStageClick = (stage) => {
+                setSelectedStage(selectedStage?.id === stage.id ? null : stage);
+            };
+
+            // Month labels for the X-axis
+            const monthLabels = useMemo(() => {
+                return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            }, []);
+
+            // Scroll to the selected stage detail when it changes
+            useEffect(() => {
+                const detailView = document.getElementById('stage-detail-view');
+                if (selectedStage && detailView) {
+                    detailView.scrollIntoView({ behavior: 'smooth' });
+                }
+            }, [selectedStage]);
+
+
+            return (
+                <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans">
+                    <header className="mb-8 p-4 bg-white rounded-xl shadow-lg border-t-4 border-blue-600">
+                        <h1 className="text-3xl font-extrabold text-gray-900 flex items-center">
+                            <Calendar className="w-8 h-8 mr-3 text-blue-600" />
+                            2026 Cultural Commitments Awards Project Tracker
+                        </h1>
+                        <p className="text-gray-500 mt-2">
+                            Visual Gantt Timeline (Click on any stage to view its deliverables)
+                        </p>
+                    </header>
+
+                    {/* --- Timeline Header (Months) --- */}
+                    <div className="flex mb-2 text-xs font-semibold text-gray-600 sticky top-0 bg-gray-50 z-20 shadow-md rounded-t-xl border-b border-gray-300">
+                        <div className="w-[20%] p-2 text-right">STAGE</div>
+                        <div className="w-[80%] flex justify-between p-2">
+                            {monthLabels.map((month, index) => (
+                                <span key={month} className={`flex-1 text-center ${index === 11 ? 'pr-2' : ''}`}>
+                                    {month}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* --- Timeline Visualization --- */}
+                    <div className="relative p-4 bg-white rounded-b-xl shadow-xl border border-gray-200">
+                        {/* Current Day Marker Line */}
+                        <div
+                            className="absolute inset-y-0 h-full w-0.5 bg-red-500 z-10"
+                            style={{ left: `${currentDayPosition}%` }}
+                        >
+                            <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full shadow-lg whitespace-nowrap">
+                                TODAY
+                            </div>
+                        </div>
+
+                        {/* Vertical Grid Lines for Months */}
+                        <div className="absolute inset-y-0 left-[20%] w-[80%] flex pointer-events-none">
+                            {/* 12 vertical lines for 12 months */}
+                            {Array(12).fill(0).map((_, index) => (
+                                <div
+                                    key={index}
+                                    className="flex-1 border-r border-gray-200"
+                                    style={{ flexBasis: `${100 / 12}%` }}
+                                />
+                            ))}
+                        </div>
+
+                        {/* Timeline Bars */}
+                        <div className="relative">
+                            {PROJECT_TIMELINE_DATA.map((stage) => (
+                                <TimelineBar
+                                    key={stage.id}
+                                    stage={stage}
+                                    dayRange={dayRange}
+                                    onClick={handleStageClick}
+                                    isSelected={selectedStage?.id === stage.id}
+                                />
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* --- Stage Detail View (Conditional) --- */}
+                    {selectedStage && (
+                        <div id="stage-detail-view" className="mt-8">
+                            <div className="flex items-center text-2xl font-bold text-gray-800 mb-3">
+                                <ChevronRight className="w-6 h-6 mr-2 text-blue-600" />
+                                Detail View: {selectedStage.stage}
+                            </div>
+                            <StageDetail stageData={selectedStage} />
+                        </div>
+                    )}
+
+                    {/* --- Status Legend --- */}
+                    <div className="mt-8 p-4 bg-white rounded-xl shadow-lg border border-gray-200">
+                        <h3 className="text-lg font-semibold text-gray-700 mb-3">Status Legend</h3>
+                        <div className="flex flex-wrap gap-6 text-sm">
+                            <div className="flex items-center space-x-2">
+                                <CheckCircle className="w-4 h-4 text-green-500" />
+                                <span className="text-gray-600">Complete</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <Clock className="w-4 h-4 text-yellow-600" />
+                                <span className="text-gray-600">In Progress</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <XCircle className="w-4 h-4 text-gray-400" />
+                                <span className="text-gray-600">Not Started</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
